@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Text;
@@ -41,7 +42,7 @@ namespace VBSharpOutliner
         //This method instantiates a new tag span for each of the outlining regions.
         public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
-            if(spans.Count == 0)
+            if (spans.Count == 0)
                 yield break;
             if (_outlineSpans == null || !_outlineSpans.Any())
             {
@@ -70,38 +71,45 @@ namespace VBSharpOutliner
         //It synchronously parses the buffer into nested outlining regions.
         private void Outline()
         {
-            var oldSpans = new List<Span>(_outlineSpans
-                .Select(r => r.Span.TranslateTo(_buffer.CurrentSnapshot, SpanTrackingMode.EdgeExclusive).Span));
-
-            _outlineSpans = GetOutlineSpans();
-
-            var newSpans = new List<Span>(_outlineSpans.Select(r => r.Span.Span));
-
-            var oldSpanCollection = new NormalizedSpanCollection(oldSpans);
-            var newSpanCollection = new NormalizedSpanCollection(newSpans);
-
-            //the changed regions are regions that appear in one set or the other, but not both.
-            var removed = NormalizedSpanCollection.Difference(oldSpanCollection, newSpanCollection);
-
-            var changeStart = int.MaxValue;
-            var changeEnd = -1;
-
-            if (removed.Count > 0)
+            try
             {
-                changeStart = removed[0].Start;
-                changeEnd = removed[removed.Count - 1].End;
+                var oldSpans = new List<Span>(_outlineSpans
+                    .Select(r => r.Span.TranslateTo(_buffer.CurrentSnapshot, SpanTrackingMode.EdgeExclusive).Span));
+
+                _outlineSpans = GetOutlineSpans();
+
+                var newSpans = new List<Span>(_outlineSpans.Select(r => r.Span.Span));
+
+                var oldSpanCollection = new NormalizedSpanCollection(oldSpans);
+                var newSpanCollection = new NormalizedSpanCollection(newSpans);
+
+                //the changed regions are regions that appear in one set or the other, but not both.
+                var removed = NormalizedSpanCollection.Difference(oldSpanCollection, newSpanCollection);
+
+                var changeStart = int.MaxValue;
+                var changeEnd = -1;
+
+                if (removed.Count > 0)
+                {
+                    changeStart = removed[0].Start;
+                    changeEnd = removed[removed.Count - 1].End;
+                }
+
+                if (newSpans.Count > 0)
+                {
+                    changeStart = Math.Min(changeStart, newSpans[0].Start);
+                    changeEnd = Math.Max(changeEnd, newSpans[newSpans.Count - 1].End);
+                }
+
+                if (changeStart <= changeEnd)
+                {
+                    TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(
+                        new SnapshotSpan(_buffer.CurrentSnapshot, Span.FromBounds(changeStart, changeEnd))));
+                }
             }
-
-            if (newSpans.Count > 0)
+            catch (Exception ex)
             {
-                changeStart = Math.Min(changeStart, newSpans[0].Start);
-                changeEnd = Math.Max(changeEnd, newSpans[newSpans.Count - 1].End);
-            }
-
-            if (changeStart <= changeEnd)
-            {
-                TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(
-                    new SnapshotSpan(_buffer.CurrentSnapshot, Span.FromBounds(changeStart, changeEnd))));
+                Logger.WriteLog(ex);
             }
         }
 

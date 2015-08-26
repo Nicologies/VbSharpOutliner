@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -35,14 +36,20 @@ namespace VBSharpOutliner
             {
                 return;
             }
-
-            var span = new TagSpan<IOutliningRegionTag>(
-                new SnapshotSpan(_textSnapshot, 
-                    GetSpanStartPosition(node, text), 
-                    GetSpanLength(node, text)),
-                new OutliningRegionTag(isDefaultCollapsed: false, isImplementation: true,
-                    collapsedForm: "...", collapsedHintForm: text));
-            OutlineSpans.Add(span);
+            try
+            {
+                var span = new TagSpan<IOutliningRegionTag>(
+                    new SnapshotSpan(_textSnapshot,
+                        GetSpanStartPosition(node, text),
+                        GetSpanLength(node, text)),
+                    new OutliningRegionTag(isDefaultCollapsed: false, isImplementation: true,
+                        collapsedForm: "...", collapsedHintForm: text));
+                OutlineSpans.Add(span);
+            }
+            catch(Exception ex)
+            {
+                Logger.WriteLog(ex, text.ToString());
+            }
         }
 
         private static int GetSpanLength(SyntaxNode node, SourceText text)
