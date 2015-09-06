@@ -56,7 +56,7 @@ namespace VBSharpOutliner
         {
             if (IsVisualBasic(node))
             {
-                var chars = geychildstartpos(node,text);
+                var chars = GetBlockStartPos(node,text);
                 return node.Span.End - chars ;//node.FullSpan.Length - text.Lines.First().SpanIncludingLineBreak.Length;
             }
             else
@@ -65,7 +65,7 @@ namespace VBSharpOutliner
             }
         }
 
-        private static int geychildstartpos(SyntaxNode node, SourceText text)
+        private static int GetBlockStartPos(SyntaxNode node, SourceText text)
         {
             var chars = node.FullSpan.Start;
             foreach (var line in text.Lines)
@@ -83,7 +83,7 @@ namespace VBSharpOutliner
         {
             if (IsVisualBasic(node))
             {
-                return geychildstartpos(node, text);
+                return GetBlockStartPos(node, text);
             }
             else
             {
