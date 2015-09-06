@@ -10,9 +10,9 @@ using VBSyntaxKind = Microsoft.CodeAnalysis.VisualBasic.SyntaxKind;
 
 namespace VBSharpOutliner
 {
-    class CSharpOutlineSpanWalker : SyntaxWalker
+    class SytaxWalkerForOutlining : SyntaxWalker
     {
-        public CSharpOutlineSpanWalker(ITextSnapshot snapshot)
+        public SytaxWalkerForOutlining(ITextSnapshot snapshot)
         {
             _textSnapshot = snapshot;
         }

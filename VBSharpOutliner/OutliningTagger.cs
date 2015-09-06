@@ -118,7 +118,7 @@ namespace VBSharpOutliner
             var docs = _buffer.CurrentSnapshot.GetRelatedDocumentsWithChanges();
             var doc = docs.First();
             var tree = doc.GetSyntaxTreeAsync().Result;
-            var walker = new CSharpOutlineSpanWalker(_buffer.CurrentSnapshot);
+            var walker = new SytaxWalkerForOutlining(_buffer.CurrentSnapshot);
             walker.Visit(tree.GetRoot());
             return walker.OutlineSpans;
         }

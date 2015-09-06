@@ -44,7 +44,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CSharpOutlineSpanWalker.cs" />
+    <Compile Include="SytaxWalkerForOutlining.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="OutliningTagger.cs" />
     <Compile Include="OutliningTaggerProvider.cs" />
