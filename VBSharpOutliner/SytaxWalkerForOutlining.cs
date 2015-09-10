@@ -115,11 +115,9 @@ namespace VBSharpOutliner
             VBSyntaxKind.ForBlock,
             VBSyntaxKind.ForEachBlock,
 
-            VBSyntaxKind.GetAccessorBlock,
             VBSyntaxKind.OperatorBlock,
             VBSyntaxKind.PropertyBlock,
             VBSyntaxKind.RaiseEventAccessorBlock,
-            VBSyntaxKind.SetAccessorBlock,
             VBSyntaxKind.RemoveHandlerAccessorBlock,
             VBSyntaxKind.AddHandlerAccessorBlock,
 
