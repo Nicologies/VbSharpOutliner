@@ -124,13 +124,27 @@ namespace VBSharpOutliner
             VBSyntaxKind.SyncLockBlock,
             VBSyntaxKind.UsingBlock,
             VBSyntaxKind.WithBlock,
+            VBSyntaxKind.ObjectCollectionInitializer,
+            VBSyntaxKind.ObjectCreationExpression,
         };
 
         private static bool IsBlock(SyntaxNode node)
         {
             if (!IsVisualBasic(node))
             {
-                return node.IsKind(SyntaxKind.Block);
+                if (node.IsKind(SyntaxKind.Block))
+                {
+                    return true;
+                }
+                if (node.IsKind(SyntaxKind.ObjectInitializerExpression))
+                {
+                    return true;
+                }
+                if (node.IsKind(SyntaxKind.CollectionInitializerExpression))
+                {
+                    return true;
+                }
+                return false;
             }
             else
             {
