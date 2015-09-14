@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Text;
 using System.Windows.Threading;
@@ -31,10 +31,10 @@ namespace VBSharpOutliner
             _updateTimer.Tick += (sender, args) =>
             {
                 _updateTimer.Stop();
-                this.Outline();
+                Task.Run(() => Outline());
             };
 
-            Outline(); // Force an initial full parse
+            Task.Run(() => Outline());
         }
 
         //Implement the GetTags method, which instantiates the tag spans. 
