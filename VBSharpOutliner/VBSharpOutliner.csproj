@@ -49,7 +49,6 @@
     <Compile Include="OutliningTagger.cs" />
     <Compile Include="OutliningTaggerProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SnapshotParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
