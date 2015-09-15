@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="index.html" />
+    <None Include="LICENSE" />
     <Content Include="stylesheet.css" />
   </ItemGroup>
   <ItemGroup>
