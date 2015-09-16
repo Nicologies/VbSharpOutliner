@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
 using VBSyntaxKind = Microsoft.CodeAnalysis.VisualBasic.SyntaxKind;
@@ -38,6 +40,10 @@ namespace VBSharpOutliner
             }
             try
             {
+                if (node.IsKind(VBSyntaxKind.MultiLineIfBlock))
+                {
+                    AddAdditionalOutlinerForIfStatement(node);
+                }
                 var span = new TagSpan<IOutliningRegionTag>(
                     new SnapshotSpan(_textSnapshot,
                         GetSpanStartPosition(node, text),
@@ -50,6 +56,25 @@ namespace VBSharpOutliner
             {
                 Logger.WriteLog(ex, text.ToString());
             }
+        }
+
+        private void AddAdditionalOutlinerForIfStatement(SyntaxNode node)
+        {
+            var multiLineIf = node as MultiLineIfBlockSyntax;
+            Debug.Assert(multiLineIf != null, "multiLineIf != null");
+            var hasElse = multiLineIf.ElseIfBlocks.Any() || multiLineIf.ElseBlock != null;
+            if (!multiLineIf.Statements.Any())
+            {
+                return;
+            }
+            var start = multiLineIf.Statements.Span.Start;
+            var len = multiLineIf.Statements.Span.Length;
+
+            var span = new TagSpan<IOutliningRegionTag>(
+                    new SnapshotSpan(_textSnapshot, start, len),
+                    new OutliningRegionTag(isDefaultCollapsed: false, isImplementation: true,
+                        collapsedForm: "...", collapsedHintForm: multiLineIf.Statements.ToFullString()));
+            OutlineSpans.Add(span);
         }
 
         private static int GetSpanLength(SyntaxNode node, SourceText text)
