@@ -2,8 +2,9 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
         <Identity Id="VBSharpOutliner.Nicologies.11E078FF-0BA6-40E7-8ADC-9C167646CD7B" Version="1.0.2" Language="en-US" Publisher="Nicologies" />
-        <DisplayName>VBSharpOutliner</DisplayName>
-        <Description xml:space="preserve">Outliner for VisualBasic and C#</Description>
+        <DisplayName>Visual Basic and C# Outliner</DisplayName>
+        <Description xml:space="preserve">This extension makes the IF, ELSE, ELSEIF, WHILE and other blocks
+collapsible in Visual Basic .NET and C#.</Description>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0,)" />
