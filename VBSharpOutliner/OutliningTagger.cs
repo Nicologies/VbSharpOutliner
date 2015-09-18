@@ -11,9 +11,8 @@ namespace VBSharpOutliner
 {
     internal class OutliningTagger : ITagger<IOutliningRegionTag>, IDisposable
     {
-        //Add some fields to track the text buffer and snapshot and to accumulate the sets of lines that should be tagged as outlining regions. 
-        //This code includes a list of Region objects (to be defined later) that represent the outlining regions.		
         private readonly ITextBuffer _buffer;
+        private ITextSnapshot _currSnapshot;
         private readonly DispatcherTimer _updateTimer;
         private List<TagSpan<IOutliningRegionTag>> _outlineSpans = new List<TagSpan<IOutliningRegionTag>>();
 
@@ -37,9 +36,6 @@ namespace VBSharpOutliner
             Task.Run(() => Outline());
         }
 
-        //Implement the GetTags method, which instantiates the tag spans. 
-        //This example assumes that the spans in the NormalizedSpanCollection passed in to the method are contiguous, although this may not always be the case. 
-        //This method instantiates a new tag span for each of the outlining regions.
         public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
             if (spans.Count == 0)
@@ -48,13 +44,19 @@ namespace VBSharpOutliner
             {
                 yield break;
             }
+
+            var entire = new SnapshotSpan(spans[0].Start, spans[spans.Count - 1].End)
+                .TranslateTo(_currSnapshot, SpanTrackingMode.EdgeExclusive);
+
             foreach (var outline in _outlineSpans)
             {
-                yield return outline;
+                var outlineSpanIntersectsTheRequestedRange = outline.Span.Start <= entire.End
+                    && outline.Span.End >= entire.Start;
+                if (outlineSpanIntersectsTheRequestedRange)
+                    yield return outline;
             }
         }
 
-        //Add a BufferChanged event handler that responds to Changed events by parsing the text buffer.
         private void BufferChanged(object sender, TextContentChangedEventArgs e)
         {
             // If this isn't the most up-to-date version of the buffer, 
@@ -62,13 +64,11 @@ namespace VBSharpOutliner
             if (e.After != _buffer.CurrentSnapshot)
             {
                 return;
-            }
+            } 
             _updateTimer.Stop();
             _updateTimer.Start(); 
         }
 
-        //Add a method that parses the buffer. The example given here is for illustration only. 
-        //It synchronously parses the buffer into nested outlining regions.
         private void Outline()
         {
             try
@@ -100,6 +100,7 @@ namespace VBSharpOutliner
                     changeStart = Math.Min(changeStart, newSpans[0].Start);
                     changeEnd = Math.Max(changeEnd, newSpans[newSpans.Count - 1].End);
                 }
+                _currSnapshot = _buffer.CurrentSnapshot;
 
                 if (changeStart <= changeEnd)
                 {
