@@ -37,7 +37,6 @@ namespace VBSharpOutliner.VisualBasic
             SyntaxKind.ForEachBlock,
 
             SyntaxKind.OperatorBlock,
-            SyntaxKind.PropertyBlock,
             SyntaxKind.RaiseEventAccessorBlock,
             SyntaxKind.RemoveHandlerAccessorBlock,
             SyntaxKind.AddHandlerAccessorBlock,
