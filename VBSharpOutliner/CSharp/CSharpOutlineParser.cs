@@ -3,26 +3,20 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
+using VBSharpOutliner.CSharp.Outliners;
 
 namespace VBSharpOutliner.CSharp
 {
-    class CSharpOutlineParser : IOutlineParser
+    internal class CSharpOutlineParser : IOutlineParser
     {
         private readonly BlockOutliner _blockOutliner = new BlockOutliner();
+        private readonly SwitchOutliner _switchOutliner = new SwitchOutliner();
+        private readonly SwitchSelectionOutliner _switchSelectionOutliner = new SwitchSelectionOutliner();
+
         public List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(SyntaxNode node, ITextSnapshot textSnapshot)
         {
-            var ret = new List<TagSpan<IOutliningRegionTag>>();
-            var isBlock = IsBlock(node);
-            if (!isBlock)
-            {
-                return ret;
-            }
-            var span = _blockOutliner.GetOutlineSpan(node, textSnapshot);
-            if (span != null)
-            {
-                ret.Add(span);
-            }
-            return ret;
+            var outliner = GetOutliner(node);
+            return outliner == null ? new List<TagSpan<IOutliningRegionTag>>() : outliner.GetOutlineSpan(node, textSnapshot);
         }
 
         private static bool IsBlock(SyntaxNode node)
@@ -40,6 +34,26 @@ namespace VBSharpOutliner.CSharp
                 return true;
             }
             return false;
+        }
+
+        private ISharpOutliner GetOutliner(SyntaxNode node)
+        {
+            if (node.IsKind(SyntaxKind.SwitchStatement))
+            {
+                return _switchOutliner;
+            }
+
+            if (node.IsKind(SyntaxKind.SwitchSection))
+            {
+                return _switchSelectionOutliner;
+            }
+
+            var isBlock = IsBlock(node);
+            if (!isBlock)
+            {
+                return null;
+            }
+            return _blockOutliner;
         }
     }
 }

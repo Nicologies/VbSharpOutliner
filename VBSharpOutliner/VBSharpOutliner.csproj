@@ -44,8 +44,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CSharp\Outliners\ISharpOutliner.cs" />
+    <Compile Include="CSharp\Outliners\SwitchSelectionOutliner.cs" />
     <Compile Include="CSharp\CSharpOutlineParser.cs" />
-    <Compile Include="CSharp\BlockOutliner.cs" />
+    <Compile Include="CSharp\Outliners\BlockOutliner.cs" />
+    <Compile Include="CSharp\Outliners\SwitchOutliner.cs" />
     <Compile Include="IOutlineParser.cs" />
     <Compile Include="SytaxWalkerForOutlining.cs" />
     <Compile Include="Logger.cs" />
