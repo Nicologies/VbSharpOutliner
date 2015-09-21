@@ -34,6 +34,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -42,19 +43,38 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CollapsedHintCreator.cs" />
     <Compile Include="CSharp\Outliners\ISharpOutliner.cs" />
     <Compile Include="CSharp\Outliners\SwitchSelectionOutliner.cs" />
     <Compile Include="CSharp\CSharpOutlineParser.cs" />
     <Compile Include="CSharp\Outliners\BlockOutliner.cs" />
     <Compile Include="CSharp\Outliners\SwitchOutliner.cs" />
+    <Compile Include="IdeServices.cs" />
     <Compile Include="IOutlineParser.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\IProjectionBufferFactoryServiceExtensions.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\ITextSnapshotExtensions.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\ITextSnapshotLineExtensions.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\IWpfTextViewExtensions.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\SnapshotSpanExtensions.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\SpanExtensions.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Shared.Extensions\LineSpan.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Shared.Extensions\StringExtensions.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Text.Shared.ExtensionsCodeAnalysis.Text.Shared.Extensions\TextSpanExtensions.cs" />
+    <Compile Include="Microsoft\ElisionBufferDeferredContent.cs" />
+    <Compile Include="Microsoft\Roslyn.Utilities\Contract.cs" />
+    <Compile Include="Microsoft\Roslyn.Utilities\EnumerableExtensions.ComparisonComparer.cs" />
+    <Compile Include="Microsoft\Roslyn.Utilities\EnumerableExtensions.cs" />
+    <Compile Include="Microsoft\Roslyn.Utilities\Hash.cs" />
+    <Compile Include="Microsoft\Roslyn.Utilities\StringExtensions.cs" />
     <Compile Include="SytaxWalkerForOutlining.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="OutliningTagger.cs" />
     <Compile Include="OutliningTaggerProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Utilities\ViewHostingControl.cs" />
     <Compile Include="VisualBasic\VbOutlineParser.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,7 @@ namespace VBSharpOutliner
 {
     internal interface IOutlineParser
     {
-        List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(SyntaxNode node, ITextSnapshot textSnapshot);
+        List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(SyntaxNode node, ITextSnapshot textSnapshot,
+            IdeServices ideServices);
     }
 }

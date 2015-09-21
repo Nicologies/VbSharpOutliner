@@ -53,7 +53,8 @@ namespace VBSharpOutliner.VisualBasic
             return VbBlocks.Any(node.IsKind);
         }
 
-        public List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(SyntaxNode node, ITextSnapshot textSnapshot)
+        public List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(SyntaxNode node, ITextSnapshot textSnapshot,
+            IdeServices ideServices)
         {
             var ret = new List<TagSpan<IOutliningRegionTag>>();
             var isBlock = IsBlock(node);
@@ -71,22 +72,28 @@ namespace VBSharpOutliner.VisualBasic
 
             if (node.IsKind(SyntaxKind.MultiLineIfBlock))
             {
-                var additionalSpan = AddAdditionalOutlinerForIfStatement(node, textSnapshot);
+                var additionalSpan = AddAdditionalOutlinerForIfStatement(node, textSnapshot, ideServices);
                 if (additionalSpan != null)
                 {
                     ret.Add(additionalSpan);
                 }
             }
+
+            var hint = CollapsedHintCreator.GetHint(
+                new SnapshotSpan(textSnapshot,
+                    node.FullSpan.Start, node.FullSpan.Length)
+                    , ideServices);
+
             var span = new TagSpan<IOutliningRegionTag>(
                 new SnapshotSpan(textSnapshot, GetSpanStartPosition(node, text), GetSpanLength(node, text)),
                 new OutliningRegionTag(isDefaultCollapsed: false, isImplementation: true,
-                    collapsedForm: "...", collapsedHintForm: text));
+                    collapsedForm: "...", collapsedHintForm: hint));
             ret.Add(span);
             return ret;
         }
 
         private static TagSpan<IOutliningRegionTag> AddAdditionalOutlinerForIfStatement(SyntaxNode node, 
-            ITextSnapshot textSnapshot)
+            ITextSnapshot textSnapshot, IdeServices ideServices)
         {
             var multiLineIf = node as MultiLineIfBlockSyntax;
             Debug.Assert(multiLineIf != null, "multiLineIf != null");
@@ -97,11 +104,15 @@ namespace VBSharpOutliner.VisualBasic
             }
             var start = multiLineIf.Statements.Span.Start;
             var len = multiLineIf.Statements.Span.Length;
+            var hint = CollapsedHintCreator.GetHint(
+                new SnapshotSpan(textSnapshot, 
+                    multiLineIf.Statements.FullSpan.Start, multiLineIf.Statements.FullSpan.Length)
+                    , ideServices);
 
             var span = new TagSpan<IOutliningRegionTag>(
                 new SnapshotSpan(textSnapshot, start, len),
                 new OutliningRegionTag(isDefaultCollapsed: false, isImplementation: true,
-                    collapsedForm: "...", collapsedHintForm: multiLineIf.Statements.ToFullString()));
+                    collapsedForm: "...", collapsedHintForm: hint));
             return span;
         }
         private static int GetBlockStartPos(SyntaxNode node, SourceText text)

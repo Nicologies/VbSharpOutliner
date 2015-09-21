@@ -13,10 +13,12 @@ namespace VBSharpOutliner.CSharp
         private readonly SwitchOutliner _switchOutliner = new SwitchOutliner();
         private readonly SwitchSelectionOutliner _switchSelectionOutliner = new SwitchSelectionOutliner();
 
-        public List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(SyntaxNode node, ITextSnapshot textSnapshot)
+        public List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(SyntaxNode node, ITextSnapshot textSnapshot,
+            IdeServices ideServices)
         {
             var outliner = GetOutliner(node);
-            return outliner == null ? new List<TagSpan<IOutliningRegionTag>>() : outliner.GetOutlineSpan(node, textSnapshot);
+            return outliner == null ? new List<TagSpan<IOutliningRegionTag>>() 
+                : outliner.GetOutlineSpan(node, textSnapshot, ideServices);
         }
 
         private static bool IsBlock(SyntaxNode node)

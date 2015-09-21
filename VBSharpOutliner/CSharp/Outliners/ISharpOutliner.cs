@@ -7,6 +7,7 @@ namespace VBSharpOutliner.CSharp.Outliners
 {
     interface ISharpOutliner
     {
-        List<TagSpan<IOutliningRegionTag>> GetOutlineSpan(SyntaxNode node, ITextSnapshot textSnapshot);
+        List<TagSpan<IOutliningRegionTag>> GetOutlineSpan(SyntaxNode node, ITextSnapshot textSnapshot,
+            IdeServices ideServices);
     }
 }

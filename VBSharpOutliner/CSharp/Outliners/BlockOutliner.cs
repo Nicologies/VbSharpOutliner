@@ -7,7 +7,8 @@ namespace VBSharpOutliner.CSharp.Outliners
 {
     class BlockOutliner : ISharpOutliner
     {
-        public List<TagSpan<IOutliningRegionTag>> GetOutlineSpan(SyntaxNode node, ITextSnapshot textSnapshot)
+        public List<TagSpan<IOutliningRegionTag>> GetOutlineSpan(SyntaxNode node, ITextSnapshot textSnapshot,
+            IdeServices ideServices)
         {
             var ret = new List<TagSpan<IOutliningRegionTag>>();
             var text = node.Parent.GetText();
@@ -16,12 +17,15 @@ namespace VBSharpOutliner.CSharp.Outliners
             {
                 return ret;
             }
+            var hint = CollapsedHintCreator.GetHint(
+                new SnapshotSpan(textSnapshot, node.Parent.FullSpan.Start, node.Parent.FullSpan.Length),
+                ideServices);
             var span = new TagSpan<IOutliningRegionTag>(
                 new SnapshotSpan(textSnapshot,
                     node.FullSpan.Start - 1,
                     GetSpanLength(node)),
                 new OutliningRegionTag(isDefaultCollapsed: false, isImplementation: true,
-                    collapsedForm: "...", collapsedHintForm: text));
+                    collapsedForm: "...", collapsedHintForm: hint));
             ret.Add(span);
             return ret;
         }

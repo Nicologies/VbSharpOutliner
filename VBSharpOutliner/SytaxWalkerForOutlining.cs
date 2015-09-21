@@ -12,15 +12,17 @@ namespace VBSharpOutliner
     {
         private readonly CSharpOutlineParser _csharpOutlineParser = new CSharpOutlineParser();
         private readonly VbOutlineParser _vbOutlineParser = new VbOutlineParser();
+        private readonly ITextSnapshot _textSnapshot;
+        private readonly IdeServices _ideServices;
 
-        public SytaxWalkerForOutlining(ITextSnapshot snapshot)
+        public SytaxWalkerForOutlining(ITextSnapshot snapshot,
+            IdeServices ideServices)
         {
             _textSnapshot = snapshot;
+            _ideServices = ideServices;
         }
 
         public List<TagSpan<IOutliningRegionTag>> OutlineSpans { get; set; } = new List<TagSpan<IOutliningRegionTag>>();
-
-        private readonly ITextSnapshot _textSnapshot;
 
         public override void Visit(SyntaxNode node)
         {
@@ -28,7 +30,7 @@ namespace VBSharpOutliner
             try
             {
                 var parser = GetOutlineParser(node);
-                var spans = parser.GetOutlineSpans(node, _textSnapshot);
+                var spans = parser.GetOutlineSpans(node, _textSnapshot, _ideServices);
                 OutlineSpans.AddRange(spans);
             }
             catch (Exception ex)

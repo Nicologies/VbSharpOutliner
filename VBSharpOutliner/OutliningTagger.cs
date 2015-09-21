@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Text;
@@ -12,15 +13,18 @@ namespace VBSharpOutliner
     internal class OutliningTagger : ITagger<IOutliningRegionTag>, IDisposable
     {
         private readonly ITextBuffer _buffer;
+        private readonly IdeServices _ideServices;
         private ITextSnapshot _currSnapshot;
         private readonly DispatcherTimer _updateTimer;
         private List<TagSpan<IOutliningRegionTag>> _outlineSpans = new List<TagSpan<IOutliningRegionTag>>();
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 
-        public OutliningTagger(ITextBuffer buffer)
+        public OutliningTagger(ITextBuffer buffer,
+            IdeServices ideServices)
         {
             _buffer = buffer;
+            _ideServices = ideServices;
             _buffer.Changed += BufferChanged;
 
             _updateTimer = new DispatcherTimer(DispatcherPriority.ApplicationIdle)
@@ -30,9 +34,13 @@ namespace VBSharpOutliner
             _updateTimer.Tick += (sender, args) =>
             {
                 _updateTimer.Stop();
-                Task.Run(() => Outline());
+                RunOutlineAsync();
             };
+            _updateTimer.Start();
+        }
 
+        private void RunOutlineAsync()
+        {
             Task.Run(() => Outline());
         }
 
@@ -104,8 +112,11 @@ namespace VBSharpOutliner
 
                 if (changeStart <= changeEnd)
                 {
-                    TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(
-                        new SnapshotSpan(_buffer.CurrentSnapshot, Span.FromBounds(changeStart, changeEnd))));
+                    _ideServices.UiDispatcher.InvokeAsync(() =>
+                    {
+                        TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(
+                            new SnapshotSpan(_buffer.CurrentSnapshot, Span.FromBounds(changeStart, changeEnd))));
+                    });
                 }
             }
             catch (Exception ex)
@@ -119,7 +130,7 @@ namespace VBSharpOutliner
             var docs = _buffer.CurrentSnapshot.GetRelatedDocumentsWithChanges();
             var doc = docs.First();
             var tree = doc.GetSyntaxTreeAsync().Result;
-            var walker = new SytaxWalkerForOutlining(_buffer.CurrentSnapshot);
+            var walker = new SytaxWalkerForOutlining(_buffer.CurrentSnapshot, _ideServices);
             walker.Visit(tree.GetRoot());
             return walker.OutlineSpans;
         }
