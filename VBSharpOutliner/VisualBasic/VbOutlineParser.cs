@@ -98,7 +98,7 @@ namespace VBSharpOutliner.VisualBasic
             var multiLineIf = node as MultiLineIfBlockSyntax;
             Debug.Assert(multiLineIf != null, "multiLineIf != null");
             var hasElse = multiLineIf.ElseIfBlocks.Any() || multiLineIf.ElseBlock != null;
-            if (multiLineIf.Statements.Count <= 1)
+            if (multiLineIf.Statements.Count <= 1 || !hasElse)
             {
                 return null;
             }
