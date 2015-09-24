@@ -22,6 +22,7 @@ namespace VBSharpOutliner
         private Thread _workerThread;
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
+        private bool _isReportingTags = false;
 
         public OutliningTagger(ITextBuffer buffer,
             IdeServices ideServices)
@@ -168,8 +169,16 @@ namespace VBSharpOutliner
                 {
                     _ideServices.UiDispatcher.InvokeAsync(() =>
                     {
-                        TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(
-                            new SnapshotSpan(newSnapshot, Span.FromBounds(changeStart, changeEnd))));
+                        _isReportingTags = true;
+                        try
+                        {
+                            TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(
+                                new SnapshotSpan(newSnapshot, Span.FromBounds(changeStart, changeEnd))));
+                        }
+                        finally
+                        {
+                            _isReportingTags = false;
+                        }
                     });
                 }
             }
@@ -201,6 +210,12 @@ namespace VBSharpOutliner
 
         public void Dispose()
         {
+            if (_isReportingTags)
+            {
+                // Seems to be a bug of visual studio, which disposes all Taggers when reporting tags
+                // See Microsoft.VisualStudio.Editor.Implementation.SimpleTextViewWindow.OnOutliningTagsChanged
+                return;
+            }
             _updateTimer.Stop();
             _buffer.Changed -= BufferChanged;
         }
