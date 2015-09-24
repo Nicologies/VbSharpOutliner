@@ -16,6 +16,8 @@ namespace VBSharpOutliner
         private ITextSnapshot _currSnapshot;
         private readonly DispatcherTimer _updateTimer;
         private List<TagSpan<IOutliningRegionTag>> _outlineSpans = new List<TagSpan<IOutliningRegionTag>>();
+        private readonly object _outliningLock = new object();
+        private bool _isProcessing = false;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private Thread _workerThread;
 
@@ -56,18 +58,31 @@ namespace VBSharpOutliner
         {
             if (spans.Count == 0)
                 yield break;
-            if (_outlineSpans == null || !_outlineSpans.Any())
+
+            List<TagSpan<IOutliningRegionTag>> outlineSpanSnapshot;
+            ITextSnapshot textSnapshot;
+            lock (_outliningLock)
+            {
+                if(_isProcessing)
+                {
+                    yield break;
+                }
+                textSnapshot = _currSnapshot;
+                outlineSpanSnapshot = _outlineSpans;
+            }
+
+            if (outlineSpanSnapshot == null || !outlineSpanSnapshot.Any())
             {
                 yield break;
             }
 
-            var entire = new SnapshotSpan(spans[0].Start, spans[spans.Count - 1].End)
-                .TranslateTo(_currSnapshot, SpanTrackingMode.EdgeExclusive);
+            var changeset = new SnapshotSpan(spans[0].Start, spans[spans.Count - 1].End)
+                    .TranslateTo(textSnapshot, SpanTrackingMode.EdgeExclusive);
 
-            foreach (var outline in _outlineSpans)
+            foreach (var outline in outlineSpanSnapshot)
             {
-                var outlineSpanIntersectsTheRequestedRange = outline.Span.Start <= entire.End
-                    && outline.Span.End >= entire.Start;
+                var outlineSpanIntersectsTheRequestedRange = outline.Span.Start <= changeset.End
+                    && outline.Span.End >= changeset.Start;
                 if (outlineSpanIntersectsTheRequestedRange)
                     yield return outline;
             }
@@ -80,7 +95,11 @@ namespace VBSharpOutliner
             if (e.After != _buffer.CurrentSnapshot)
             {
                 return;
-            } 
+            }
+            if (_buffer.EditInProgress)
+            {
+                return;
+            }
             _updateTimer.Stop();
             _updateTimer.Start(); 
         }
@@ -89,10 +108,17 @@ namespace VBSharpOutliner
         {
             try
             {
+                var newSnapshot = _buffer.CurrentSnapshot;
                 var oldSpans = new List<Span>(_outlineSpans
-                    .Select(r => r.Span.TranslateTo(_buffer.CurrentSnapshot, SpanTrackingMode.EdgeExclusive).Span));
+                    .Select(r => r.Span.TranslateTo(newSnapshot, SpanTrackingMode.EdgeExclusive).Span));
+                var newOutlineSpans = GetOutlineSpans(newSnapshot);
 
-                _outlineSpans = GetOutlineSpans();
+                lock (_outliningLock)
+                {
+                    _isProcessing = true;
+                    _outlineSpans = newOutlineSpans;
+                    _currSnapshot = newSnapshot;
+                }
 
                 var newSpans = new List<Span>(_outlineSpans.Select(r => r.Span.Span));
 
@@ -116,14 +142,13 @@ namespace VBSharpOutliner
                     changeStart = Math.Min(changeStart, newSpans[0].Start);
                     changeEnd = Math.Max(changeEnd, newSpans[newSpans.Count - 1].End);
                 }
-                _currSnapshot = _buffer.CurrentSnapshot;
 
                 if (changeStart <= changeEnd)
                 {
                     _ideServices.UiDispatcher.InvokeAsync(() =>
                     {
                         TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(
-                            new SnapshotSpan(_buffer.CurrentSnapshot, Span.FromBounds(changeStart, changeEnd))));
+                            new SnapshotSpan(newSnapshot, Span.FromBounds(changeStart, changeEnd))));
                     });
                 }
             }
@@ -131,14 +156,21 @@ namespace VBSharpOutliner
             {
                 Logger.WriteLog(ex);
             }
+            finally
+            {
+                lock (_outliningLock)
+                {
+                    _isProcessing = false;
+                }
+            }
         }
 
-        private List<TagSpan<IOutliningRegionTag>> GetOutlineSpans()
+        private List<TagSpan<IOutliningRegionTag>> GetOutlineSpans(ITextSnapshot textSnapshot)
         {
-            var docs = _buffer.CurrentSnapshot.GetRelatedDocumentsWithChanges();
+            var docs = textSnapshot.GetRelatedDocumentsWithChanges();
             var doc = docs.First();
             var tree = doc.GetSyntaxTreeAsync().Result;
-            var walker = new SytaxWalkerForOutlining(_buffer.CurrentSnapshot, _ideServices, 
+            var walker = new SytaxWalkerForOutlining(textSnapshot, _ideServices, 
                 _cancellationTokenSource.Token);
             walker.Visit(tree.GetRoot());
             return walker.OutlineSpans;
