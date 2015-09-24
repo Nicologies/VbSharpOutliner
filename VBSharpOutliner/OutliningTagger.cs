@@ -79,12 +79,33 @@ namespace VBSharpOutliner
             var changeset = new SnapshotSpan(spans[0].Start, spans[spans.Count - 1].End)
                     .TranslateTo(textSnapshot, SpanTrackingMode.EdgeExclusive);
 
-            foreach (var outline in outlineSpanSnapshot)
+            var changesetPos = outlineSpanSnapshot.BinarySearch(x => x.Span.Start.CompareTo(changeset.Start));
+            if (changesetPos < 0)
             {
-                var outlineSpanIntersectsTheRequestedRange = outline.Span.Start <= changeset.End
-                    && outline.Span.End >= changeset.Start;
-                if (outlineSpanIntersectsTheRequestedRange)
+                changesetPos = ~changesetPos;
+            }
+            changesetPos -= 1; //includes the previous span in case it ends in the changeset.
+            if (changesetPos < 0)
+            {
+                changesetPos = 0;
+            }
+
+            for (var i = changesetPos; i < outlineSpanSnapshot.Count; ++i)
+            {
+                var outline = outlineSpanSnapshot[i];
+                if (outline.Span.Start <= changeset.End
+                    && outline.Span.End >= changeset.Start)
+                {
                     yield return outline;
+                }
+                else if (i == changesetPos) 
+                {
+                    // the first one may end before the changeset's start
+                }
+                else
+                {
+                    yield break;
+                }
             }
         }
 
@@ -111,7 +132,7 @@ namespace VBSharpOutliner
                 var newSnapshot = _buffer.CurrentSnapshot;
                 var oldSpans = new List<Span>(_outlineSpans
                     .Select(r => r.Span.TranslateTo(newSnapshot, SpanTrackingMode.EdgeExclusive).Span));
-                var newOutlineSpans = GetOutlineSpans(newSnapshot);
+                var newOutlineSpans = GetOutlineSpans(newSnapshot).OrderBy(r => r.Span.Start).ToList();
 
                 lock (_outliningLock)
                 {
