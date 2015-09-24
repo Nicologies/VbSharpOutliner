@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Text;
 using System.Windows.Threading;
@@ -17,6 +16,8 @@ namespace VBSharpOutliner
         private ITextSnapshot _currSnapshot;
         private readonly DispatcherTimer _updateTimer;
         private List<TagSpan<IOutliningRegionTag>> _outlineSpans = new List<TagSpan<IOutliningRegionTag>>();
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private Thread _workerThread;
 
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
 
@@ -41,7 +42,14 @@ namespace VBSharpOutliner
 
         private void RunOutlineAsync()
         {
-            Task.Run(() => Outline());
+            if(_workerThread != null)
+            {
+                _cancellationTokenSource.Cancel();
+                _workerThread.Join();
+                _cancellationTokenSource = new CancellationTokenSource();
+            }
+            _workerThread = new Thread(Outline) { Priority = ThreadPriority.BelowNormal };
+            _workerThread.Start();
         }
 
         public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans)
@@ -130,7 +138,8 @@ namespace VBSharpOutliner
             var docs = _buffer.CurrentSnapshot.GetRelatedDocumentsWithChanges();
             var doc = docs.First();
             var tree = doc.GetSyntaxTreeAsync().Result;
-            var walker = new SytaxWalkerForOutlining(_buffer.CurrentSnapshot, _ideServices);
+            var walker = new SytaxWalkerForOutlining(_buffer.CurrentSnapshot, _ideServices, 
+                _cancellationTokenSource.Token);
             walker.Visit(tree.GetRoot());
             return walker.OutlineSpans;
         }

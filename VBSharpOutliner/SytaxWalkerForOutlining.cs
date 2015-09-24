@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -14,18 +15,24 @@ namespace VBSharpOutliner
         private readonly VbOutlineParser _vbOutlineParser = new VbOutlineParser();
         private readonly ITextSnapshot _textSnapshot;
         private readonly IdeServices _ideServices;
+        private readonly CancellationToken _cancellationToken;
 
-        public SytaxWalkerForOutlining(ITextSnapshot snapshot,
-            IdeServices ideServices)
+        public SytaxWalkerForOutlining(ITextSnapshot snapshot, IdeServices ideServices,
+            CancellationToken cancellationToken)
         {
             _textSnapshot = snapshot;
             _ideServices = ideServices;
+            _cancellationToken = cancellationToken;
         }
 
         public List<TagSpan<IOutliningRegionTag>> OutlineSpans { get; set; } = new List<TagSpan<IOutliningRegionTag>>();
 
         public override void Visit(SyntaxNode node)
         {
+            if(_cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
             base.Visit(node);
             try
             {
