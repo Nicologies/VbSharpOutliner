@@ -134,6 +134,10 @@ namespace VBSharpOutliner
                 var oldSpans = new List<Span>(_outlineSpans
                     .Select(r => r.Span.TranslateTo(newSnapshot, SpanTrackingMode.EdgeExclusive).Span));
                 var newOutlineSpans = GetOutlineSpans(newSnapshot).OrderBy(r => r.Span.Start).ToList();
+                if (_cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    return;
+                }
 
                 lock (_outliningLock)
                 {
@@ -167,6 +171,10 @@ namespace VBSharpOutliner
 
                 if (changeStart <= changeEnd)
                 {
+                    if (_cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        return;
+                    }
                     _ideServices.UiDispatcher.InvokeAsync(() =>
                     {
                         _isReportingTags = true;
@@ -216,8 +224,19 @@ namespace VBSharpOutliner
                 // See Microsoft.VisualStudio.Editor.Implementation.SimpleTextViewWindow.OnOutliningTagsChanged
                 return;
             }
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource = null;
+            }
+            if (_workerThread != null)
+            {
+                _workerThread.Join();
+                _workerThread = null;
+            }
             _updateTimer.Stop();
             _buffer.Changed -= BufferChanged;
+            GC.SuppressFinalize(this);
         }
 
         #endregion
