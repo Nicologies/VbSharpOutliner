@@ -54,6 +54,7 @@
     <Compile Include="CSharp\Outliners\SwitchOutliner.cs" />
     <Compile Include="IdeServices.cs" />
     <Compile Include="IOutlineParser.cs" />
+    <Compile Include="ListExtensions.cs" />
     <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\IProjectionBufferFactoryServiceExtensions.cs" />
     <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\ITextSnapshotExtensions.cs" />
     <Compile Include="Microsoft\CodeAnalysis.Editor.Shared.Extensions\ITextSnapshotLineExtensions.cs" />
